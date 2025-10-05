@@ -36,7 +36,7 @@ Resources:
           yum install -y python3 git
           pip3 install flask
           cd /home/ec2-user
-          git clone https://github.com/<your-github-username>/flask-app.git
+          git clone https://github.com/gelobias14/webapp.git
           cd flask-app
           nohup python3 app.py > app.log 2>&1 &
 
