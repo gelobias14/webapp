@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: EC2 instance hosting Flask app from GitHub
+
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+  FlaskSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and Flask HTTP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: 0.0.0.0/0
+
+  FlaskInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      ImageId: ami-0c02fb55956c7d316 # Amazon Linux 2 (check region)
+      SecurityGroups:
+        - !Ref FlaskSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y python3 git
+          cd /home/ec2-user
+          git clone https://github.com/gelobias14/flask-app.git
+          cd flask-app
+          pip3 install -r requirements.txt || pip3 install flask
+          nohup python3 app.py > app.log 2>&1 &
+
+Outputs:
+  FlaskAppURL:
+    Description: Flask App URL
+    Value: !Sub "http://${FlaskInstance.PublicDnsName}:5000"
